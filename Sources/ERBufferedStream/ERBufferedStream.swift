@@ -66,7 +66,6 @@ public class ERBufferedStream<Payload: Decodable> {
     public func clear() {
         queue.sync {
             buffer = Data()
-            subject = PassthroughSubject()
         }
     }
 }
