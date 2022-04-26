@@ -2,9 +2,10 @@ import XCTest
 @testable import ERBufferedStream
 import OpenCombineDispatch
 import OpenCombine
+import Combine
 
 final class ERBufferedStreamTests: XCTestCase {
-    var cancellables = Set<AnyCancellable>()
+    var cancellables = Set<Combine.AnyCancellable>()
     
     func testStream() throws {
         // This is an example of a functional test case.
@@ -41,14 +42,15 @@ final class ERBufferedStreamTests: XCTestCase {
         }
         print(windowMultipliers)
         
-        let sink = stream.subject.sink(receiveCompletion: { completion in
-            if case .failure(let error) = completion {
+        let cancellable = stream.subject.sink { payload in
+            if case .failure(let error) = payload {
                 XCTFail("Encountered an error during stream smoke test: \(error)")
             }
-        }, receiveValue: { payload in
             print("A payload!")
             count += 1
-        }).store(in: &cancellables)
+        }
+        unsafeBitCast(cancellable, to: Combine.AnyCancellable.self).store(in: &cancellables)
+        print(cancellables)
         
         let payload = StreamPayload()
         let data = try! JSONEncoder().encode(payload)

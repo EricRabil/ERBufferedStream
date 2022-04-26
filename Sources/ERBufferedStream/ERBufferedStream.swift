@@ -20,7 +20,7 @@ public class ERBufferedStream<Payload: Decodable> {
     }
     
     /// The subject where decoded data (or an error) is emitted as it is processed
-    public let subject = PassthroughSubject<Payload, StreamError>()
+    public private(set) var subject = PassthroughSubject<Result<Payload, StreamError>, Never>()
     
     private var buffer = Data()
     private let queue = DispatchQueue(label: "ERBufferedStream")
@@ -30,9 +30,9 @@ public class ERBufferedStream<Payload: Decodable> {
         let data = buffer
         buffer = Data()
         do {
-            subject.send(try JSONDecoder().decode(Payload.self, from: data))
+            subject.send(.success(try JSONDecoder().decode(Payload.self, from: data)))
         } catch {
-            subject.send(completion: .failure(StreamError(error: error, rawData: data)))
+            subject.send(.failure(StreamError(error: error, rawData: data)))
         }
     }
     
@@ -65,6 +65,7 @@ public class ERBufferedStream<Payload: Decodable> {
     public func clear() {
         queue.sync {
             buffer = Data()
+            subject = PassthroughSubject()
         }
     }
 }
