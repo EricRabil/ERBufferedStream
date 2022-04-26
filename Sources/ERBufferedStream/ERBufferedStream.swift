@@ -10,6 +10,7 @@ public class ERBufferedStream<Payload: Decodable> {
     
     /// The byte that splits one chunk of data from the next.
     public let terminator: UInt8
+    public let decoder: JSONDecoder = JSONDecoder()
     
     public init(terminator: UInt8) {
         self.terminator = terminator
@@ -30,7 +31,7 @@ public class ERBufferedStream<Payload: Decodable> {
         let data = buffer
         buffer = Data()
         do {
-            subject.send(.success(try JSONDecoder().decode(Payload.self, from: data)))
+            subject.send(.success(try self.decoder.decode(Payload.self, from: data)))
         } catch {
             subject.send(.failure(StreamError(error: error, rawData: data)))
         }
